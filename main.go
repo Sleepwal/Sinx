@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/SleepWalker/sinx/snet"
 
 func main() {
-	fmt.Println("Hello")
+	server := snet.NewServer("Test")
+	server.Serve()
 }
