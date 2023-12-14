@@ -1,6 +1,7 @@
 package snet
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -30,6 +31,8 @@ func (s *Server) Start() {
 
 	fmt.Println("start Sinx server success, ", s.Name, " is listening...")
 
+	var cid uint32 = 0
+
 	// 3.阻塞，等待客户端连接，处理客户端业务
 	for {
 		conn, err := listener.AcceptTCP()
@@ -38,25 +41,29 @@ func (s *Server) Start() {
 			continue
 		}
 
-		// 做一个回显业务，最大512字节
-		go func() {
-			buf := make([]byte, 512)
-			for {
-				len, err := conn.Read(buf)
-				if err != nil {
-					fmt.Println("read buffer error: ", err)
-					continue
-				}
+		// 处理新连接，用链接模块处理
+		handleConn := NewConnection(conn, cid, CallbackClient)
+		cid++
 
-				// 回显，发送给客户端
-				if _, err := conn.Write(buf[:len]); err != nil {
-					fmt.Println("write buffer error: ", err)
-					continue
-				}
-			}
-		}()
+		// 启动一个goroutine处理业务
+		go handleConn.Start()
 	}
 
+}
+
+/*
+* 当前客户端链接绑定的handle
+TODO 由用户自定义
+*/
+func CallbackClient(conn *net.TCPConn, buf []byte, len int) error {
+	fmt.Println("[Connection Handle]Callback to Client...")
+	// 回显
+	if _, err := conn.Write(buf[:len]); err != nil {
+		fmt.Println("write buffer error: ", err)
+		return errors.New("write buffer error: ")
+	}
+
+	return nil
 }
 
 func (s *Server) Stop() {

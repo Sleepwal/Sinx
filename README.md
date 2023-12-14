@@ -1,2 +1,3 @@
 # Sinx
-学习Zinx开源框架
+学习[zinx](https://github.com/aceld/zinx)开源框架
+
