@@ -58,3 +58,15 @@ func (pr *PingRouter) PostHandle(request iface.IRequest) {
 	}
 }
 ```
+
+## V0.4 全局配置模块
+跟3.0相比，main函数中使用代码一样。
+
+但是增加了全局配置，全局配置在conf/sinx.yaml中，可以配置一些全局参数，比如：
+```yaml
+host: 127.0.0.1
+port: 8888
+name: sinx demoServerApp
+version: V0.4
+maxConn: 3
+```

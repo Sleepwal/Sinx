@@ -5,21 +5,18 @@ import (
 	"net"
 
 	"github.com/SleepWalker/sinx/iface"
+	"github.com/SleepWalker/sinx/utils"
 )
 
 type Connection struct {
 	// 当前链接的socket
 	Conn *net.TCPConn
-
 	// 链接ID
 	ConnID uint32
-
 	// 当前的链接状态
 	isClosed bool
-
 	// 通道: 告知当前链接已经停止
 	ExitChan chan bool
-
 	// 该链接处理的方法Router
 	Router iface.IRouter
 }
@@ -42,7 +39,7 @@ func (c *Connection) StartReader() {
 	defer fmt.Println("Connection ID = ", c.ConnID, " Reader is exit, address is ", c.RemoteAddr().String())
 	defer c.Stop()
 
-	buf := make([]byte, 512)
+	buf := make([]byte, utils.GlobalObject.MaxPackageSize)
 	for {
 		//读取客户端数据到buf
 		len, err := c.Conn.Read(buf)

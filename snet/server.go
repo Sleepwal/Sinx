@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/SleepWalker/sinx/iface"
+	"github.com/SleepWalker/sinx/utils"
 )
 
 type Server struct {
@@ -58,6 +59,14 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) Serve() {
+	fmt.Println("[Sinx]---Serve start!")
+	fmt.Println("[Sinx]---Server Name:", utils.GlobalObject.Name)
+	fmt.Println("[Sinx]---Server IP:", utils.GlobalObject.Host)
+	fmt.Println("[Sinx]---Server Port:", utils.GlobalObject.Port)
+	fmt.Println("[Sinx]---Server Version:", utils.GlobalObject.Version,
+		", Server MaxConn:", utils.GlobalObject.MaxConn,
+		", Server MaxPackageSize:", utils.GlobalObject.MaxPackageSize)
+
 	//Serve要处理其他业务，不能再Start中阻塞，故开启goroutine
 	go s.Start()
 
@@ -77,10 +86,10 @@ func (s *Server) AddRouter(router iface.IRouter) {
 **/
 func NewServer(name string) iface.IServer {
 	s := &Server{
-		Name:      name,
+		Name:      utils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "0.0.0.0",
-		Port:      8888,
+		IP:        utils.GlobalObject.Host,
+		Port:      utils.GlobalObject.Port,
 		Router:    nil,
 	}
 
