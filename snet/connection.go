@@ -17,21 +17,21 @@ type Connection struct {
 	// 当前的链接状态
 	isClosed bool
 
-	// 当前链接绑定的处理业务方法
-	handleAPI iface.HandleFunc
-
 	// 通道: 告知当前链接已经停止
 	ExitChan chan bool
+
+	// 该链接处理的方法Router
+	Router iface.IRouter
 }
 
 // 初始化
-func NewConnection(conn *net.TCPConn, connID uint32, callbackAPI iface.HandleFunc) *Connection {
+func NewConnection(conn *net.TCPConn, connID uint32, router iface.IRouter) *Connection {
 	c := &Connection{
-		Conn:      conn,
-		ConnID:    connID,
-		handleAPI: callbackAPI,
-		isClosed:  false,
-		ExitChan:  make(chan bool, 1),
+		Conn:     conn,
+		ConnID:   connID,
+		Router:   router,
+		isClosed: false,
+		ExitChan: make(chan bool, 1),
 	}
 
 	return c
@@ -51,11 +51,19 @@ func (c *Connection) StartReader() {
 			continue
 		}
 
-		//调用绑定的handleAPI
-		if err := c.handleAPI(c.Conn, buf, len); err != nil {
-			fmt.Println("Connection handleAPI error: ", err)
-			break
+		// 得到当前conn数据的request请求数据
+		req := &Requset{
+			conn: c,
+			data: buf[:len],
 		}
+
+		// 执行注册的路由方法
+		go func() {
+			c.Router.PreHandle(req)
+			c.Router.Handle(req)
+			c.Router.PostHandle(req)
+		}()
+
 	}
 }
 

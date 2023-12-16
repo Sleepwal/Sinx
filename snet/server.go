@@ -1,7 +1,6 @@
 package snet
 
 import (
-	"errors"
 	"fmt"
 	"net"
 
@@ -13,6 +12,8 @@ type Server struct {
 	IPVersion string `info:"IP版本"`
 	IP        string `info:"服务器监听的IP"`
 	Port      int    `info:"服务器监听的端口"`
+	// server注册的链接对应的处理业务
+	Router iface.IRouter `info:"路由"`
 }
 
 func (s *Server) Start() {
@@ -42,28 +43,13 @@ func (s *Server) Start() {
 		}
 
 		// 处理新连接，用链接模块处理
-		handleConn := NewConnection(conn, cid, CallbackClient)
+		handleConn := NewConnection(conn, cid, s.Router)
 		cid++
 
 		// 启动一个goroutine处理业务
 		go handleConn.Start()
 	}
 
-}
-
-/*
-* 当前客户端链接绑定的handle
-TODO 由用户自定义
-*/
-func CallbackClient(conn *net.TCPConn, buf []byte, len int) error {
-	fmt.Println("[Connection Handle]Callback to Client...")
-	// 回显
-	if _, err := conn.Write(buf[:len]); err != nil {
-		fmt.Println("write buffer error: ", err)
-		return errors.New("write buffer error: ")
-	}
-
-	return nil
 }
 
 func (s *Server) Stop() {
@@ -81,6 +67,11 @@ func (s *Server) Serve() {
 	select {}
 }
 
+func (s *Server) AddRouter(router iface.IRouter) {
+	s.Router = router
+	fmt.Println("[Server]---AddRouter success!	")
+}
+
 /**
 * 返回一个Server对象
 **/
@@ -90,6 +81,7 @@ func NewServer(name string) iface.IServer {
 		IPVersion: "tcp4",
 		IP:        "0.0.0.0",
 		Port:      8888,
+		Router:    nil,
 	}
 
 	return s
