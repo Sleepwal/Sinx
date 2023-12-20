@@ -18,18 +18,18 @@ type Connection struct {
 	isClosed bool
 	// 通道: 告知当前链接已经停止
 	ExitChan chan bool
-	// 该链接处理的方法Router
-	Router iface.IRouter
+	// 消息管理模块
+	MsgHandle iface.IMsgHandle
 }
 
 // 初始化
-func NewConnection(conn *net.TCPConn, connID uint32, router iface.IRouter) *Connection {
+func NewConnection(conn *net.TCPConn, connID uint32, handler iface.IMsgHandle) *Connection {
 	c := &Connection{
-		Conn:     conn,
-		ConnID:   connID,
-		Router:   router,
-		isClosed: false,
-		ExitChan: make(chan bool, 1),
+		Conn:      conn,
+		ConnID:    connID,
+		MsgHandle: handler,
+		isClosed:  false,
+		ExitChan:  make(chan bool, 1),
 	}
 
 	return c
@@ -73,13 +73,9 @@ func (c *Connection) StartReader() {
 		}
 
 		// 执行注册的路由方法
-		go func() {
-			c.Router.PreHandle(req)
-			c.Router.Handle(req)
-			c.Router.PostHandle(req)
-		}()
-
+		go c.MsgHandle.DoMsgHandler(req)
 	}
+
 }
 
 // 启动链接

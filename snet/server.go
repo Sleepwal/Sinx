@@ -9,12 +9,26 @@ import (
 )
 
 type Server struct {
-	Name      string `info:"服务器名称"`
-	IPVersion string `info:"IP版本"`
-	IP        string `info:"服务器监听的IP"`
-	Port      int    `info:"服务器监听的端口"`
-	// server注册的链接对应的处理业务
-	Router iface.IRouter `info:"路由"`
+	Name      string           `info:"服务器名称"`
+	IPVersion string           `info:"IP版本"`
+	IP        string           `info:"服务器监听的IP"`
+	Port      int              `info:"服务器监听的端口"`
+	MsgHandle iface.IMsgHandle // server的消息管理模块
+}
+
+/**
+* 返回一个Server对象
+**/
+func NewServer() iface.IServer {
+	s := &Server{
+		Name:      utils.GlobalObject.Name,
+		IPVersion: "tcp4",
+		IP:        utils.GlobalObject.Host,
+		Port:      utils.GlobalObject.Port,
+		MsgHandle: NewMsgHandle(),
+	}
+
+	return s
 }
 
 func (s *Server) Start() {
@@ -44,7 +58,7 @@ func (s *Server) Start() {
 		}
 
 		// 处理新连接，用链接模块处理
-		handleConn := NewConnection(conn, cid, s.Router)
+		handleConn := NewConnection(conn, cid, s.MsgHandle)
 		cid++
 
 		// 启动一个goroutine处理业务
@@ -76,22 +90,7 @@ func (s *Server) Serve() {
 	select {}
 }
 
-func (s *Server) AddRouter(router iface.IRouter) {
-	s.Router = router
+func (s *Server) AddRouter(msgID uint32, router iface.IRouter) {
+	s.MsgHandle.AddRouter(msgID, router)
 	fmt.Println("[Server]---AddRouter success!	")
-}
-
-/**
-* 返回一个Server对象
-**/
-func NewServer() iface.IServer {
-	s := &Server{
-		Name:      utils.GlobalObject.Name,
-		IPVersion: "tcp4",
-		IP:        utils.GlobalObject.Host,
-		Port:      utils.GlobalObject.Port,
-		Router:    nil,
-	}
-
-	return s
 }
