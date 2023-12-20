@@ -84,7 +84,7 @@ func (s *Server) AddRouter(router iface.IRouter) {
 /**
 * 返回一个Server对象
 **/
-func NewServer(name string) iface.IServer {
+func NewServer() iface.IServer {
 	s := &Server{
 		Name:      utils.GlobalObject.Name,
 		IPVersion: "tcp4",

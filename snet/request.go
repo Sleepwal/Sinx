@@ -7,7 +7,7 @@ type Requset struct {
 	conn iface.IConnection
 
 	// 请求的数据
-	data []byte
+	msg iface.IMessage
 }
 
 // 链接
@@ -15,7 +15,12 @@ func (r *Requset) GetConnection() iface.IConnection {
 	return r.conn
 }
 
-// 请求的数据
+// 获取请求的数据
 func (r *Requset) GetData() []byte {
-	return r.data
+	return r.msg.GetData()
+}
+
+// 请求的ID
+func (r *Requset) GetMsgID() uint32 {
+	return r.msg.GetMsgId()
 }

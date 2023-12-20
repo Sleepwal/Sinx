@@ -1,11 +1,12 @@
 package snet
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/SleepWalker/sinx/iface"
-	"github.com/SleepWalker/sinx/utils"
 )
 
 type Connection struct {
@@ -39,19 +40,36 @@ func (c *Connection) StartReader() {
 	defer fmt.Println("Connection ID = ", c.ConnID, " Reader is exit, address is ", c.RemoteAddr().String())
 	defer c.Stop()
 
-	buf := make([]byte, utils.GlobalObject.MaxPackageSize)
 	for {
-		//读取客户端数据到buf
-		len, err := c.Conn.Read(buf)
+		// 读取客户端消息的Head，8个字节
+		headBuf := make([]byte, GetHeadLen())
+		if _, err := io.ReadFull(c.GetTCPConnect(), headBuf); err != nil {
+			fmt.Println("Connection Read head error: ", err)
+			break
+		}
+
+		// 拆包，得到 MsgID 和 MsgData
+		msg, err := UnPack(headBuf)
 		if err != nil {
-			fmt.Println("Connection Read error: ", err)
-			continue
+			fmt.Println("Message UnPack error: ", err)
+			break
+		}
+
+		// 根据DataLen，接着读取消息中的Data
+		if msg.GetDataLen() > 0 {
+			dataBuf := make([]byte, msg.GetDataLen())
+			if _, err := io.ReadFull(c.GetTCPConnect(), dataBuf); err != nil {
+				fmt.Println("Connection Read Message data error: ", err)
+				break
+			}
+
+			msg.SetData(dataBuf)
 		}
 
 		// 得到当前conn数据的request请求数据
 		req := &Requset{
 			conn: c,
-			data: buf[:len],
+			msg:  msg,
 		}
 
 		// 执行注册的路由方法
@@ -102,7 +120,26 @@ func (c *Connection) RemoteAddr() net.Addr {
 	return c.Conn.RemoteAddr()
 }
 
-// 发送数据给远程的客户端
-func (c *Connection) Send(data []byte) error {
+/**
+* 给客户端发送数据，先封包，再发送
+**/
+func (c *Connection) SendMsg(msgId uint32, data []byte) error {
+	if c.isClosed {
+		return errors.New("Connection is closed")
+	}
+
+	// 封包 len|id|data
+	binaryMsg, err := Pack(NewMessage(msgId, data))
+	if err != nil {
+		fmt.Println("Message Pack error: ", err)
+		return errors.New("msg Pack error")
+	}
+
+	// 发送给客户端
+	if _, err := c.Conn.Write(binaryMsg); err != nil {
+		fmt.Println("Connection Write Msg error: ", err)
+		return errors.New("Connection Write Msg error")
+	}
+
 	return nil
 }

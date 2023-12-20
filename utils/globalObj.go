@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/SleepWalker/sinx/iface"
@@ -50,7 +51,9 @@ func (g *GlobalObj) LoadConfig() {
 	// 读取 YAML 文件
 	file, err := os.ReadFile("conf/sinx.yaml")
 	if err != nil {
-		panic(err)
+		fmt.Println("[GlobalObj]use default config")
+		return
+		// panic(err)
 	}
 
 	// 解析 YAML 文件
