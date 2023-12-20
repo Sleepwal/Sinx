@@ -37,7 +37,7 @@ func init() {
 		Host:           "0.0.0.0",
 		Port:           8888,
 		Name:           "SinxServerApp",
-		Version:        "V0.4",
+		Version:        "V0.7",
 		MaxConn:        1000,
 		MaxPackageSize: 4096,
 	}

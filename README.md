@@ -269,3 +269,17 @@ func main() {
 }
 
 ```
+
+## V0.7
+- Connection中读、写分离
+  - 添加一个管道msgChan，读、写Goroutine进行通信
+
+同V0.6
+
+配置文件
+```yaml
+host: 127.0.0.1
+port: 8888
+name: Sinx V0.7 demoServerApp
+maxConn: 3
+```

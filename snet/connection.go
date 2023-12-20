@@ -16,8 +16,10 @@ type Connection struct {
 	ConnID uint32
 	// 当前的链接状态
 	isClosed bool
-	// 通道: 告知当前链接已经停止
+	// 通道: 告知当前链接已经停止（Reader给Writer）
 	ExitChan chan bool
+	// 用于读、写Goroutine之间的通信
+	msgChan chan []byte
 	// 消息管理模块
 	MsgHandle iface.IMsgHandle
 }
@@ -30,14 +32,45 @@ func NewConnection(conn *net.TCPConn, connID uint32, handler iface.IMsgHandle) *
 		MsgHandle: handler,
 		isClosed:  false,
 		ExitChan:  make(chan bool, 1),
+		msgChan:   make(chan []byte, 1),
 	}
 
 	return c
 }
 
+// 启动链接
+func (c *Connection) Start() {
+	fmt.Println("Connection Start... ConnID = ", c.ConnID)
+	// 启动从当前链接读数据的业务
+	go c.StartReader()
+
+	//启动写数据的业务
+	go c.StartWriter()
+}
+
+// 停止链接
+func (c *Connection) Stop() {
+	fmt.Println("Connection Stop... ConnID = ", c.ConnID)
+
+	// 已关闭
+	if c.isClosed {
+		return
+	}
+
+	c.isClosed = true
+	c.Conn.Close()     // 关闭socket连接
+	c.ExitChan <- true //告知Writer关闭
+	// 回收资源
+	close(c.ExitChan)
+	close(c.msgChan)
+}
+
+/**
+* 读
+**/
 func (c *Connection) StartReader() {
-	fmt.Println("Connection StartReader is running...")
-	defer fmt.Println("Connection ID = ", c.ConnID, " Reader is exit, address is ", c.RemoteAddr().String())
+	fmt.Println("[Reader Goroutine] is running...")
+	defer fmt.Println("[Reader] is exit, Connection ID = ", c.ConnID, ", address is ", c.RemoteAddr().String())
 	defer c.Stop()
 
 	for {
@@ -78,42 +111,24 @@ func (c *Connection) StartReader() {
 
 }
 
-// 启动链接
-func (c *Connection) Start() {
-	fmt.Println("Connection Start... ConnID = ", c.ConnID)
-	// 从当前链接读数据
-	go c.StartReader()
+/**
+* 写消息Goroutine，专门发送给客户端消息
+**/
+func (c *Connection) StartWriter() {
+	fmt.Println("[Writer Goroutine] is running...")
+	defer fmt.Println("[Writer] is exit, Connection ID = ", c.ConnID, ", address is ", c.RemoteAddr().String())
 
-	//TODO 写数据
-}
-
-// 停止链接
-func (c *Connection) Stop() {
-	fmt.Println("Connection Stop... ConnID = ", c.ConnID)
-
-	// 已关闭
-	if c.isClosed {
-		return
+	// 循环等待msgChan的消息，收到就发送给客户端
+	for {
+		select {
+		case data := <-c.msgChan: //有数据，写给客户端
+			if _, err := c.Conn.Write(data); err != nil {
+				fmt.Println("[Connection]---send data error: ", err)
+			}
+		case <-c.ExitChan: //Reader退出了，Writer也要退出
+			return
+		}
 	}
-
-	c.isClosed = true
-	c.Conn.Close()    // 关闭socket连接
-	close(c.ExitChan) // 回收资源
-}
-
-// 获取当前链接绑定的socket
-func (c *Connection) GetTCPConnect() *net.TCPConn {
-	return c.Conn
-}
-
-// 获取当前链接模块的链接ID
-func (c *Connection) GetConnID() uint32 {
-	return c.ConnID
-}
-
-// 获取远程客户端的TCP状态: IP、Port
-func (c *Connection) RemoteAddr() net.Addr {
-	return c.Conn.RemoteAddr()
 }
 
 /**
@@ -132,10 +147,22 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 	}
 
 	// 发送给客户端
-	if _, err := c.Conn.Write(binaryMsg); err != nil {
-		fmt.Println("Connection Write Msg error: ", err)
-		return errors.New("Connection Write Msg error")
-	}
+	c.msgChan <- binaryMsg
 
 	return nil
+}
+
+// 获取当前链接绑定的socket
+func (c *Connection) GetTCPConnect() *net.TCPConn {
+	return c.Conn
+}
+
+// 获取当前链接模块的链接ID
+func (c *Connection) GetConnID() uint32 {
+	return c.ConnID
+}
+
+// 获取远程客户端的TCP状态: IP、Port
+func (c *Connection) RemoteAddr() net.Addr {
+	return c.Conn.RemoteAddr()
 }
