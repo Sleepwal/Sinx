@@ -1,6 +1,6 @@
 package snet
 
-import "github.com/SleepWalker/sinx/iface"
+import "sinx/iface"
 
 type Requset struct {
 	// 与客户端 建立好的链接

@@ -6,8 +6,8 @@ import (
 	"io"
 	"net"
 
-	"github.com/SleepWalker/sinx/iface"
-	"github.com/SleepWalker/sinx/utils"
+	"sinx/iface"
+	"sinx/utils"
 )
 
 type Connection struct {

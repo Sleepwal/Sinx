@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SleepWalker/sinx/iface"
+	"sinx/iface"
+
 	"gopkg.in/yaml.v3"
 )
 

@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/SleepWalker/sinx/iface"
-	"github.com/SleepWalker/sinx/utils"
+	"sinx/iface"
+	"sinx/utils"
 )
 
 /**

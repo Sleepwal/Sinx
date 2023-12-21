@@ -1,4 +1,4 @@
-module github.com/SleepWalker/sinx
+module sinx
 
 go 1.21.4
 

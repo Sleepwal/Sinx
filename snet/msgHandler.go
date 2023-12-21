@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/SleepWalker/sinx/iface"
-	"github.com/SleepWalker/sinx/utils"
+	"sinx/iface"
+	"sinx/utils"
 )
 
 /**
