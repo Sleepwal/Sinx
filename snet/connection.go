@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/SleepWalker/sinx/iface"
+	"github.com/SleepWalker/sinx/utils"
 )
 
 type Connection struct {
@@ -106,7 +107,11 @@ func (c *Connection) StartReader() {
 		}
 
 		// 执行注册的路由方法
-		go c.MsgHandle.DoMsgHandler(req)
+		if utils.GlobalObject.WorkerPoolSize > 0 { // 已经开启工作池
+			c.MsgHandle.AddRequestToTaskQueue(req) // 交给worker池
+		} else { // 未开启工作池，直接处理
+			go c.MsgHandle.DoMsgHandler(req)
+		}
 	}
 
 }

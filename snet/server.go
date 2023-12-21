@@ -32,6 +32,9 @@ func NewServer() iface.IServer {
 }
 
 func (s *Server) Start() {
+	// 0.开启消息队列和worker工作池
+	s.MsgHandle.StartWorkerPool()
+
 	// 1.获取TCP的Addr
 	addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 	if err != nil {

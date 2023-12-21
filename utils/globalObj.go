@@ -20,9 +20,11 @@ type GlobalObj struct {
 	Name      string        `yaml:"name"` // 服务器名称
 
 	//======= Sinx ==========
-	Version        string `yaml:"version"`        // Sinx版本号
-	MaxConn        int    `yaml:"maxConn"`        // 服务器允许的最大连接数
-	MaxPackageSize uint32 `yaml:"maxPackageSize"` // 数据包的最大值
+	Version          string `yaml:"version"`          // Sinx版本号
+	MaxConn          int    `yaml:"maxConn"`          // 服务器允许的最大连接数
+	MaxPackageSize   uint32 `yaml:"maxPackageSize"`   // 数据包的最大值
+	WorkerPoolSize   uint32 `yaml:"workerPoolSize"`   // 业务工作worker池的Goroutine数量
+	MaxWorkerTaskLen uint32 `yaml:"maxWorkerTaskLen"` // 允许用户最多开辟多少个worker（限定条件）
 }
 
 // 定义一个全局的对外GlobalObj
@@ -34,12 +36,14 @@ var GlobalObject *GlobalObj
 func init() {
 	// 默认值
 	GlobalObject = &GlobalObj{
-		Host:           "0.0.0.0",
-		Port:           8888,
-		Name:           "SinxServerApp",
-		Version:        "V0.7",
-		MaxConn:        1000,
-		MaxPackageSize: 4096,
+		Host:             "0.0.0.0",
+		Port:             8888,
+		Name:             "SinxServerApp",
+		Version:          "V0.8",
+		MaxConn:          1000,
+		MaxPackageSize:   4096,
+		WorkerPoolSize:   10,
+		MaxWorkerTaskLen: 1024,
 	}
 
 	// 加载配置文件conf/sinx.yaml
