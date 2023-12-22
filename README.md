@@ -1,27 +1,7 @@
 # Sinx
 学习[zinx](https://github.com/aceld/zinx)1.0开源框架
 
-# V0.8 开辟任务池和限定业务Goroutine
-## ChangeLog
-MsgHandle类中
-- 属性
-  - 添加worker任务池（消息队列）TaskQueue
-  - 添加worker池的数量WorkerPoolSize，默认10
-- 方法
-  - 启动worker工作池：StartWorkerPool
-  - 启动一个worker工作流程：StartOneWorker
-  - 添加请求到TaskQueue中：AddRequestToTaskQueue
-
-集成到Sinx
-- 添加全局变量
-  1. WorkerPoolSize
-  2. MaxWorkerTaskLen
-- Sever启动时，开启worker工作池
-- Connection中，
-  - 如果开启工作池，交给工作池处理
-  - 否则直接处理
-
----
+# V1.0 链接管理和连接属性设置
 
 # 使用该框架开发
 
@@ -29,7 +9,7 @@ MsgHandle类中
 ```yaml
 host: 127.0.0.1
 port: 8888
-name: Sinx V0.8 demoServerApp
+name: Sinx V1.0 demoServerApp
 maxConn: 3
 workerPoolSize: 10
 ```
@@ -38,6 +18,11 @@ server.go
 ```go
 func main() {
 	server := snet.NewServer()
+
+	//注册链接hook回调函数
+	server.SetOnConnStart(DoConnectionBegin)
+	server.SetOnConnStop(DoConnectionLast)
+
 	//添加自定义router
 	server.AddRouter(0, &PingRouter{})
 	server.AddRouter(1, &HelloRouter{})
@@ -76,6 +61,37 @@ func (hr *HelloRouter) Handle(request iface.IRequest) {
 	if err != nil {
 		fmt.Println("cal back handle error: ", err)
 	}
+}
+
+// 创建连接的时候执行
+func DoConnectionBegin(conn iface.IConnection) {
+	fmt.Println("DoConnecionBegin is Called ... ")
+
+	//=============设置两个链接属性，在连接创建之后===========
+	fmt.Println("Set conn Name, Home done!")
+	conn.SetProperty("Name", "SleepWalker")
+	conn.SetProperty("Home", "https://github.com/Sleepwal")
+	//===================================================
+
+	err := conn.SendMsg(2, []byte("DoConnection BEGIN..."))
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+// 连接断开的时候执行
+func DoConnectionLast(conn iface.IConnection) {
+	//============在连接销毁之前，查询conn的Name，Home属性=====
+	if name, err := conn.GetProperty("Name"); err == nil {
+		fmt.Println("Conn Property Name = ", name)
+	}
+
+	if home, err := conn.GetProperty("Home"); err == nil {
+		fmt.Println("Conn Property Home = ", home)
+	}
+	//===================================================
+
+	fmt.Println("DoConneciotnLost is Called ... ")
 }
 
 ```

@@ -20,6 +20,9 @@ type GlobalObj struct {
 	Port      int           `yaml:"port"` // 监听的端口
 	Name      string        `yaml:"name"` // 服务器名称
 
+	//======= Connection ==========
+	MaxMsgChanLen uint32 `yaml:"maxMsgChanLen"` // 消息缓冲最大长度
+
 	//======= Sinx ==========
 	Version          string `yaml:"version"`          // Sinx版本号
 	MaxConn          int    `yaml:"maxConn"`          // 服务器允许的最大连接数
@@ -40,7 +43,8 @@ func init() {
 		Host:             "0.0.0.0",
 		Port:             8888,
 		Name:             "SinxServerApp",
-		Version:          "V0.8",
+		MaxMsgChanLen:    10,
+		Version:          "V1.0",
 		MaxConn:          1000,
 		MaxPackageSize:   4096,
 		WorkerPoolSize:   10,

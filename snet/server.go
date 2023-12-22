@@ -9,11 +9,17 @@ import (
 )
 
 type Server struct {
-	Name      string           `info:"服务器名称"`
-	IPVersion string           `info:"IP版本"`
-	IP        string           `info:"服务器监听的IP"`
-	Port      int              `info:"服务器监听的端口"`
-	MsgHandle iface.IMsgHandle // server的消息管理模块
+	Name      string             `info:"服务器名称"`
+	IPVersion string             `info:"IP版本"`
+	IP        string             `info:"服务器监听的IP"`
+	Port      int                `info:"服务器监听的端口"`
+	MsgHandle iface.IMsgHandle   // server的消息管理模块
+	ConnMgr   iface.IConnManager // server的连接管理模块
+
+	//该Server的连接创建时Hook函数
+	OnConnStart func(conn iface.IConnection)
+	//该Server的连接断开时的Hook函数
+	OnConnStop func(conn iface.IConnection)
 }
 
 /**
@@ -26,6 +32,7 @@ func NewServer() iface.IServer {
 		IP:        utils.GlobalObject.Host,
 		Port:      utils.GlobalObject.Port,
 		MsgHandle: NewMsgHandle(),
+		ConnMgr:   NewConnManager(),
 	}
 
 	return s
@@ -60,8 +67,16 @@ func (s *Server) Start() {
 			continue
 		}
 
+		// 判断是否超过最大连接数量
+		if s.ConnMgr.Len() >= utils.GlobalObject.MaxConn {
+			//TODO 给客户端响应，超出最大连接的错误
+			fmt.Println("-------> [Server]---", s.Name, " Server is full, too many connections! max conn num = ", utils.GlobalObject.MaxConn)
+			conn.Close()
+			continue
+		}
+
 		// 处理新连接，用链接模块处理
-		handleConn := NewConnection(conn, cid, s.MsgHandle)
+		handleConn := NewConnection(s, conn, cid, s.MsgHandle)
 		cid++
 
 		// 启动一个goroutine处理业务
@@ -72,7 +87,8 @@ func (s *Server) Start() {
 
 func (s *Server) Stop() {
 	// TODO 资源、状态、链接信息 停止或回收
-
+	fmt.Println("[Sinx]---", s.Name, " Server Stop!")
+	s.ConnMgr.ClearConn()
 }
 
 func (s *Server) Serve() {
@@ -96,4 +112,34 @@ func (s *Server) Serve() {
 func (s *Server) AddRouter(msgID uint32, router iface.IRouter) {
 	s.MsgHandle.AddRouter(msgID, router)
 	fmt.Println("[Server]---AddRouter success!	")
+}
+
+func (s *Server) GetConnMgr() iface.IConnManager {
+	return s.ConnMgr
+}
+
+// 设置该Server的连接创建时Hook函数
+func (s *Server) SetOnConnStart(hookFunc func(iface.IConnection)) {
+	s.OnConnStart = hookFunc
+}
+
+// 设置该Server的连接断开时的Hook函数
+func (s *Server) SetOnConnStop(hookFunc func(iface.IConnection)) {
+	s.OnConnStop = hookFunc
+}
+
+// 调用连接OnConnStart Hook函数
+func (s *Server) CallOnConnStart(conn iface.IConnection) {
+	if s.OnConnStart != nil {
+		fmt.Println("---> CallOnConnStart....")
+		s.OnConnStart(conn)
+	}
+}
+
+// 调用连接OnConnStop Hook函数
+func (s *Server) CallOnConnStop(conn iface.IConnection) {
+	if s.OnConnStop != nil {
+		fmt.Println("---> CallOnConnStop....")
+		s.OnConnStop(conn)
+	}
 }
