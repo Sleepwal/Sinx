@@ -1,6 +1,6 @@
-package snet
+package net
 
-import "sinx/iface"
+import "SleepXLink/iface"
 
 /**
 * 实现Router时，嵌入BaseRouter基类，根据需求重写方法

@@ -1,4 +1,4 @@
-package snet
+package net
 
 type Message struct {
 	ID      uint32 //消息ID

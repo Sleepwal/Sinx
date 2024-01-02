@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"sinx/iface"
+	"SleepXLink/iface"
 
 	"gopkg.in/yaml.v3"
 )

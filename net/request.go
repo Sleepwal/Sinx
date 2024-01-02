@@ -1,6 +1,6 @@
-package snet
+package net
 
-import "sinx/iface"
+import "SleepXLink/iface"
 
 type Requset struct {
 	// 与客户端 建立好的链接

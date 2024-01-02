@@ -1,10 +1,10 @@
-package snet
+package net
 
 import (
 	"fmt"
 	"sync"
 
-	"sinx/iface"
+	"SleepXLink/iface"
 )
 
 /**

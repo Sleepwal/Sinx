@@ -1,11 +1,11 @@
-package snet
+package net
 
 import (
 	"fmt"
 	"strconv"
 
-	"sinx/iface"
-	"sinx/utils"
+	"SleepXLink/iface"
+	"SleepXLink/utils"
 )
 
 /**
