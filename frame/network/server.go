@@ -1,4 +1,4 @@
-package net
+package network
 
 import (
 	"fmt"
@@ -45,7 +45,7 @@ func (s *Server) Start() {
 	// 1.获取TCP的Addr
 	addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 	if err != nil {
-		fmt.Println("net resolve addr error: ", err)
+		fmt.Println("network resolve addr error: ", err)
 	}
 
 	// 2.监听地址

@@ -1,0 +1,5 @@
+host: 127.0.0.1
+port: 8888
+name: SleepXLink V1.0 demoServerApp
+maxConn: 3
+workerPoolSize: 10
