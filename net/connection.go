@@ -100,29 +100,6 @@ func (c *Connection) StartReader() {
 	defer c.Stop()
 
 	for {
-		//headBuf := make([]byte, GetHeadLen())
-		//if _, err := io.ReadFull(c.GetTCPConnect(), headBuf); err != nil {
-		//	fmt.Println("Connection Read head error: ", err)
-		//	break
-		//}
-		//
-		//// 拆包，得到 MsgID 和 MsgData
-		//msg, err := UnPack(headBuf)
-		//if err != nil {
-		//	fmt.Println("Message UnPack error: ", err)
-		//	break
-		//}
-		//
-		//// 根据DataLen，接着读取消息中的Data
-		//if msg.GetDataLen() > 0 {
-		//	dataBuf := make([]byte, msg.GetDataLen())
-		//	if _, err := io.ReadFull(c.GetTCPConnect(), dataBuf); err != nil {
-		//		fmt.Println("Connection Read Message data error: ", err)
-		//		break
-		//	}
-		//
-		//	msg.SetData(dataBuf)
-		//}
 		msg, err := UnPack(c.GetTCPConnect())
 		if err != nil {
 			fmt.Println("Connection UnPack error: ", err)

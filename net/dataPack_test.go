@@ -1,8 +1,7 @@
-package snet
+package net
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"testing"
 	"time"
@@ -29,32 +28,13 @@ func TestDataPack(t *testing.T) {
 			// 处理客户端请求
 			go func(conn net.Conn) {
 				for {
-					head := make([]byte, GetHeadLen())
-					_, err := io.ReadFull(conn, head)
-					if err != nil {
-						fmt.Println("read failed, err:", err)
-						break
-					}
-
-					// 将head拆包到msg中
-					msg, err := UnPack(head)
+					msg, err := UnPack(conn)
 					if err != nil {
 						fmt.Println("unpack failed, err:", err)
 						return
 					}
 
-					if msg.GetDataLen() > 0 {
-						msg.SetData(make([]byte, msg.GetDataLen()))
-
-						_, err := io.ReadFull(conn, msg.GetData())
-						if err != nil {
-							fmt.Println("read failed, err:", err)
-							return
-						}
-
-						fmt.Println("----> receive msg:", msg.GetMsgId(), msg.GetDataLen(), ", data: ", string(msg.GetData()))
-					}
-
+					fmt.Println("----> receive msg:", msg.GetMsgId(), msg.GetDataLen(), ", data: ", string(msg.GetData()))
 				}
 			}(conn)
 		}
