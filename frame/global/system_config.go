@@ -1,4 +1,4 @@
-package utils
+package global
 
 import (
 	"fmt"
@@ -9,11 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-/**
-* 存储全局参数
-* 一些参数通过配置文件读取，由用户进行配置
-**/
-type GlobalObj struct {
+// SystemConfig 存储全局参数
+// 一些参数通过配置文件读取，由用户进行配置
+type SystemConfig struct {
 	//======= Sever ==========
 	TcpServer iface.IServer // 全局Server对象
 	Host      string        `yaml:"host"` // 服务器监听的IP
@@ -23,7 +21,7 @@ type GlobalObj struct {
 	//======= Connection ==========
 	MaxMsgChanLen uint32 `yaml:"maxMsgChanLen"` // 消息缓冲最大长度
 
-	//======= Sinx ==========
+	//======= SleepXLink ==========
 	Version          string `yaml:"version"`          // Sinx版本号
 	MaxConn          int    `yaml:"maxConn"`          // 服务器允许的最大连接数
 	MaxPackageSize   uint32 `yaml:"maxPackageSize"`   // 数据包的最大值
@@ -31,18 +29,13 @@ type GlobalObj struct {
 	MaxWorkerTaskLen uint32 `yaml:"maxWorkerTaskLen"` // 允许用户最多开辟多少个worker（限定条件）
 }
 
-// 定义一个全局的对外GlobalObj
-var GlobalObject *GlobalObj
-
-/**
-* 提供init方法，初始化GlobalObject
-**/
-func init() {
+// InitSystemConfig 提供init方法，初始化SystemConfig
+func InitSystemConfig() {
 	// 默认值
-	GlobalObject = &GlobalObj{
+	SXL_CONFIG = &SystemConfig{
 		Host:             "0.0.0.0",
 		Port:             8888,
-		Name:             "SinxServerApp",
+		Name:             "SleepXLinkServerApp",
 		MaxMsgChanLen:    10,
 		Version:          "V1.0",
 		MaxConn:          1000,
@@ -51,22 +44,22 @@ func init() {
 		MaxWorkerTaskLen: 1024,
 	}
 
-	// 加载配置文件conf/sinx.yaml
-	GlobalObject.LoadConfig()
+	// 加载配置文件conf/config.yaml
+	SXL_CONFIG.LoadConfig()
 }
 
-// 从conf/sinx.yaml配置参数
-func (g *GlobalObj) LoadConfig() {
+// LoadConfig 从config.yaml读取配置参数
+func (sg *SystemConfig) LoadConfig() {
 	// 读取 YAML 文件
-	file, err := os.ReadFile("conf/sinx.yaml")
+	file, err := os.ReadFile("config.yaml")
 	if err != nil {
 		fmt.Println("[GlobalObj]use default config")
 		return
-		// panic(err)
+		//panic(err)
 	}
 
 	// 解析 YAML 文件
-	err = yaml.Unmarshal(file, GlobalObject)
+	err = yaml.Unmarshal(file, SXL_CONFIG)
 	if err != nil {
 		panic(err)
 	}

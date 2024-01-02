@@ -7,7 +7,7 @@
 
 运行服务端
 ```shell
-go run .\demo\main.go
+go run .\demo\server.go
 ```
 
 运行客户端

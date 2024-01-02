@@ -1,20 +1,20 @@
 package network
 
 import (
+	"SleepXLink/global"
+	"SleepXLink/iface"
 	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
-
-	"SleepXLink/iface"
-	"SleepXLink/utils"
 )
 
-/**
-* 封包、拆包 工具
-* 面向TCP连接中的数据流，处理TCP粘包问题
-**/
+/****************************************
+@Author : SleepWalker
+@Description: 封包数据和拆包数据实现
+@Time : 2024/1/2 16:30
+****************************************/
 
 // 获取包的头的长度
 func GetHeadLen() uint32 {
@@ -75,7 +75,7 @@ func UnPack(reader io.Reader) (iface.IMessage, error) {
 
 	//================2.data数据部分================
 	//2.1 判断数据包 是否超过 最大长度
-	if utils.GlobalObject.MaxPackageSize > 0 && msg.GetDataLen() > utils.GlobalObject.MaxPackageSize {
+	if global.SXL_CONFIG.MaxPackageSize > 0 && msg.GetDataLen() > global.SXL_CONFIG.MaxPackageSize {
 		return msg, errors.New("package size over limit")
 	}
 

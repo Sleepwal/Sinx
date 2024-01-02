@@ -1,11 +1,11 @@
 package network
 
 import (
+	"SleepXLink/global"
 	"fmt"
 	"strconv"
 
 	"SleepXLink/iface"
-	"SleepXLink/utils"
 )
 
 /**
@@ -20,8 +20,8 @@ type MsgHandle struct {
 func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
 		Apis:           make(map[uint32]iface.IRouter),
-		WorkerPoolSize: utils.GlobalObject.WorkerPoolSize,                              //全局配置中获取
-		TaskQueue:      make([]chan iface.IRequest, utils.GlobalObject.WorkerPoolSize), //一个worker对应一个queus
+		WorkerPoolSize: global.SXL_CONFIG.WorkerPoolSize,                              //全局配置中获取
+		TaskQueue:      make([]chan iface.IRequest, global.SXL_CONFIG.WorkerPoolSize), //一个worker对应一个queus
 	}
 }
 
@@ -59,7 +59,7 @@ func (mh *MsgHandle) StartWorkerPool() {
 	// 根据workerPoolSize分别开启worker，每个worker开启一个goroutine
 	for i := 0; i < int(mh.WorkerPoolSize); i++ {
 		// 1.当前worker对应的channel消息队列，开辟空间
-		mh.TaskQueue[i] = make(chan iface.IRequest, utils.GlobalObject.MaxWorkerTaskLen)
+		mh.TaskQueue[i] = make(chan iface.IRequest, global.SXL_CONFIG.MaxWorkerTaskLen)
 		// 2.启动当前worker，阻塞等待消息 从channel传递进来
 		go mh.StartOneWorker(i)
 	}
@@ -85,7 +85,7 @@ func (mh *MsgHandle) StartOneWorker(workerID int) {
 **/
 func (mh *MsgHandle) AddRequestToTaskQueue(request iface.IRequest) {
 	// 1.将请求平均分配给worker，根据ConnID进行分配
-	workerID := request.GetConnection().GetConnID() % utils.GlobalObject.WorkerPoolSize
+	workerID := request.GetConnection().GetConnID() % global.SXL_CONFIG.WorkerPoolSize
 	fmt.Println("Add ConnId = ", request.GetConnection().GetConnID(),
 		", request MsgID = ", request.GetMsgID(),
 		" to WorkerID = ", workerID)

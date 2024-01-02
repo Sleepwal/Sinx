@@ -1,13 +1,13 @@
 package network
 
 import (
+	"SleepXLink/global"
 	"errors"
 	"fmt"
 	"net"
 	"sync"
 
 	"SleepXLink/iface"
-	"SleepXLink/utils"
 )
 
 type Connection struct {
@@ -44,7 +44,7 @@ func NewConnection(server iface.IServer, conn *net.TCPConn, connID uint32, handl
 		isClosed:    false,
 		ExitChan:    make(chan bool, 1),
 		msgChan:     make(chan []byte, 1),
-		msgBuffChan: make(chan []byte, utils.GlobalObject.MaxMsgChanLen), //不要忘记初始化
+		msgBuffChan: make(chan []byte, global.SXL_CONFIG.MaxMsgChanLen), //不要忘记初始化
 		property:    make(map[string]interface{}),
 	}
 
@@ -56,7 +56,7 @@ func NewConnection(server iface.IServer, conn *net.TCPConn, connID uint32, handl
 
 // 启动链接
 func (c *Connection) Start() {
-	fmt.Println("Connection Start... ConnID = ", c.ConnID)
+	global.SXL_LOG.Info("Connection Start... ", "ConnID", c.ConnID)
 	// 启动从当前链接读数据的业务
 	go c.StartReader()
 
@@ -69,7 +69,7 @@ func (c *Connection) Start() {
 
 // 停止链接
 func (c *Connection) Stop() {
-	fmt.Println("Connection Stop... ConnID = ", c.ConnID)
+	global.SXL_LOG.Info("Connection Stop... ", "ConnID", c.ConnID)
 
 	// 已关闭
 	if c.isClosed {
@@ -113,7 +113,7 @@ func (c *Connection) StartReader() {
 		}
 
 		// 执行注册的路由方法
-		if utils.GlobalObject.WorkerPoolSize > 0 { // 已经开启工作池
+		if global.SXL_CONFIG.WorkerPoolSize > 0 { // 已经开启工作池
 			c.MsgHandle.AddRequestToTaskQueue(req) // 交给worker池
 		} else { // 未开启工作池，直接处理
 			go c.MsgHandle.DoMsgHandler(req)

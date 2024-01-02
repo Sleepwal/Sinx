@@ -1,11 +1,12 @@
 package network
 
 import (
+	"SleepXLink/global"
+	"SleepXLink/logo"
 	"fmt"
 	"net"
 
 	"SleepXLink/iface"
-	"SleepXLink/utils"
 )
 
 type Server struct {
@@ -27,10 +28,10 @@ type Server struct {
 **/
 func NewServer() iface.IServer {
 	s := &Server{
-		Name:      utils.GlobalObject.Name,
+		Name:      global.SXL_CONFIG.Name,
 		IPVersion: "tcp4",
-		IP:        utils.GlobalObject.Host,
-		Port:      utils.GlobalObject.Port,
+		IP:        global.SXL_CONFIG.Host,
+		Port:      global.SXL_CONFIG.Port,
 		MsgHandle: NewMsgHandle(),
 		ConnMgr:   NewConnManager(),
 	}
@@ -55,7 +56,7 @@ func (s *Server) Start() {
 		return
 	}
 
-	fmt.Println("start Sinx server success, ", s.Name, " is listening...")
+	fmt.Println("start SleepXLink server success, ", s.Name, " is listening...")
 
 	var cid uint32 = 0
 
@@ -68,9 +69,9 @@ func (s *Server) Start() {
 		}
 
 		// 判断是否超过最大连接数量
-		if s.ConnMgr.Len() >= utils.GlobalObject.MaxConn {
+		if s.ConnMgr.Len() >= global.SXL_CONFIG.MaxConn {
 			//TODO 给客户端响应，超出最大连接的错误
-			fmt.Println("-------> [Server]---", s.Name, " Server is full, too many connections! max conn num = ", utils.GlobalObject.MaxConn)
+			fmt.Println("-------> [Server]---", s.Name, " Server is full, too many connections! max conn num = ", global.SXL_CONFIG.MaxConn)
 			conn.Close()
 			continue
 		}
@@ -87,21 +88,22 @@ func (s *Server) Start() {
 
 func (s *Server) Stop() {
 	// TODO 资源、状态、链接信息 停止或回收
-	fmt.Println("[Sinx]---", s.Name, " Server Stop!")
+	fmt.Println("[SleepXLink]---", s.Name, " Server Stop!")
 	s.ConnMgr.ClearConn()
 }
 
 func (s *Server) Serve() {
-	fmt.Println("[Sinx]---Serve start!")
-	fmt.Println("[Sinx]---Server Name:", utils.GlobalObject.Name)
-	fmt.Println("[Sinx]---Server IP:", utils.GlobalObject.Host)
-	fmt.Println("[Sinx]---Server Port:", utils.GlobalObject.Port)
-	fmt.Println("[Sinx]---Server Version:", utils.GlobalObject.Version,
-		", Server MaxConn:", utils.GlobalObject.MaxConn,
-		", Server MaxPackageSize:", utils.GlobalObject.MaxPackageSize)
+	logo.InitLogo()
+	global.SXL_LOG.Info("[SleepXLink]---" + global.SXL_CONFIG.Name + " Server Start!")
+	fmt.Println("[SleepXLink]---Server IP:", global.SXL_CONFIG.Host)
+	fmt.Println("[SleepXLink]---Server Port:", global.SXL_CONFIG.Port)
+	fmt.Println("[SleepXLink]---Server Version:", global.SXL_CONFIG.Version,
+		", Server MaxConn:", global.SXL_CONFIG.MaxConn,
+		", Server MaxPackageSize:", global.SXL_CONFIG.MaxPackageSize)
 
 	//Serve要处理其他业务，不能再Start中阻塞，故开启goroutine
 	go s.Start()
+	defer s.Stop()
 
 	// TODO 启动服务器后的额外业务
 
@@ -111,24 +113,24 @@ func (s *Server) Serve() {
 
 func (s *Server) AddRouter(msgID uint32, router iface.IRouter) {
 	s.MsgHandle.AddRouter(msgID, router)
-	fmt.Println("[Server]---AddRouter success!	")
+	fmt.Println("AddRouter success!")
 }
 
 func (s *Server) GetConnMgr() iface.IConnManager {
 	return s.ConnMgr
 }
 
-// 设置该Server的连接创建时Hook函数
+// SetOnConnStart 设置该Server的连接创建时Hook函数
 func (s *Server) SetOnConnStart(hookFunc func(iface.IConnection)) {
 	s.OnConnStart = hookFunc
 }
 
-// 设置该Server的连接断开时的Hook函数
+// SetOnConnStop 设置该Server的连接断开时的Hook函数
 func (s *Server) SetOnConnStop(hookFunc func(iface.IConnection)) {
 	s.OnConnStop = hookFunc
 }
 
-// 调用连接OnConnStart Hook函数
+// CallOnConnStart 调用连接OnConnStart Hook函数
 func (s *Server) CallOnConnStart(conn iface.IConnection) {
 	if s.OnConnStart != nil {
 		fmt.Println("---> CallOnConnStart....")
@@ -136,7 +138,7 @@ func (s *Server) CallOnConnStart(conn iface.IConnection) {
 	}
 }
 
-// 调用连接OnConnStop Hook函数
+// CallOnConnStop 调用连接OnConnStop Hook函数
 func (s *Server) CallOnConnStop(conn iface.IConnection) {
 	if s.OnConnStop != nil {
 		fmt.Println("---> CallOnConnStop....")
